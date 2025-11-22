@@ -6,7 +6,7 @@
   - [Example Result](#example-result)
 - [Performanance](#performance)
   - [Test Notes](#test-notes)
-  - [Test Results](#test-results))
+  - [Test Results](#test-results)
 - [Installing](#installing)
 
 # realtime.udr - Informix Extension
