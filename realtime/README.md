@@ -73,7 +73,7 @@ But it still has the limitation of only providing a single timestamp for the ent
 
 The following tests show Lines (records)/sec for a dbaccess unload query, that only calls the timestamp in question, that is, it's a 10M row single field query.
 
-# Ouutut Demo and Rates..
+# Outut Demo and Rates..
 ```
 ============== realtime_demo.sh ==================
 
