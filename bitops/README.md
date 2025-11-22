@@ -48,7 +48,7 @@ __This package may or may not exist purely because I thought a set of functions 
 
 ### `bitprint()`
 
-Prints an integer as 4 bitgrouped "binary strings" (that is `1010_1010_0010...` )
+Prints an integer as 4 bit grouped "binary strings" (that is `1010_1010_0010...` )
 The minimum number of bit-groups are used to print the value
 
 ### `hexprint()` 
