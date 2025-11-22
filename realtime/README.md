@@ -106,3 +106,16 @@ After_Date        2025-11-22 19:28:16.586
 'utc_realtime_dt()' Lines/Sec ..... - Rate: [1.48M/s]  Count: 10.0M  Elapsed: 0:00:06
 'utc_realtime_dec()' Lines/Sec .... - Rate: [2.86M/s]  Count: 10.0M  Elapsed: 0:00:03
 ```
+
+
+# Installing
+
+- EDIT THE MAKEFILE!!
+- You'll need to set a target DB, and probably change the RUNAS
+
+```
+su - informix
+make
+make install
+```
+**Make sure you copy `$INFORMIXDIR/extend/realtime` folder to add db servers in your cluster**
