@@ -16,10 +16,9 @@ A C User Defined Routine wrapper around `clock_gettime(2)` which gets the curren
  - By default returns a `datetime year to fraction(5)`
  - Provides a new timestamp (if the time has changed!) every call, 
    - **Even when called multiple times from within a stored proc or transaction** unlike `current` or `sysdate`
-   - See exmple
  - Fairly quick
  - Safe, to the best of my knowledge, although I"ve only tested on Linux
- - Nanosecond resolution option.
+ - Nanosecond resolution option. ;-)
 
 
 ## Example Use
