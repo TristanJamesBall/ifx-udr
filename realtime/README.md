@@ -1,4 +1,13 @@
 
+# Table of contents
+
+- [realtime.udr](#realtimeudr)
+  - [Example Use](#example-use)
+  - [Example Result](#example-result)
+- [Output Notes](#output-notes)
+- [Outut Demo and Rates..](#outut-demo-and-rates)
+- [Installing](#installing)
+
 # realtime.udr 
 
 Simple wrappers around `clock_gettime(2)` which gets the current time in UTC or Localtime
