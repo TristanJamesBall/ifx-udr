@@ -23,6 +23,8 @@
 
 This isn't in production anywhere, and may neve be ( although the hexprint might, because informix's `hex()` annoys me...
 
+__This package may or may not exist purely because I thought a set of functions called 'bop_left, bop_right' etc sounded funny__
+
 ## BitOps Functions
 
 A series of routines for doing bitwise operations in Informix.
@@ -35,7 +37,6 @@ So that's what these versions do too, making these a closer representation of th
 
 Because informix only supports signed integer types, all results have the high bit masked off before returning ( that is to say, they return 15, 31, or 63 bit values. That happens last though, so you can right shift the sign bit into your remaining value  ( I'm not sure if this is a good idea or not tbh )
 
-__This package may or may not exist purely because I thought a set of functions called 'bop_left, bop_righ' etc sounded funny__
 
 ### `bop_left(val,shift)`
 ### `bop_right(val,shift)`
