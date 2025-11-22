@@ -4,19 +4,22 @@
 - [realtime.udr](#realtimeudr)
   - [Example Use](#example-use)
   - [Example Result](#example-result)
-- [Output Notes](#output-notes)
-- [Outut Demo and Rates..](#outut-demo-and-rates)
+- [Performanance](#performance)
+  - [Test Notes](#test-notes)
+  - [Test Results](#test-results))
 - [Installing](#installing)
 
-# realtime.udr 
+# realtime.udr - Informix Extension
 
-Simple wrappers around `clock_gettime(2)` which gets the current time in UTC or Localtime
+A C User Defined Routine wrapper around `clock_gettime(2)` which gets the current time in UTC or Localtime
 
  - By default returns a `datetime year to fraction(5)`
  - Provides a new timestamp (if the time has changed!) every call, 
-   - **wven from within a stored proc or transaction** unlike `current` or `sysdate`
+   - **Even when called multiple times from within a stored proc or transaction** unlike `current` or `sysdate`
+   - See exmple
  - Fairly quick
  - Safe, to the best of my knowledge, although I"ve only tested on Linux
+ - Nanosecond resolution option.
 
 
 ## Example Use
@@ -71,7 +74,9 @@ realtime_dt  2025-11-22 19:59:13.47943
 ```
 
 
-# Output Notes
+# Performance 
+
+## Test Notes
 
 `utc_realtime_dec()` has been cast to vharchar to avoid dbaccess DBFLTMASK limits on decimal sizes
 
@@ -82,7 +87,7 @@ But it still has the limitation of only providing a single timestamp for the ent
 
 The following tests show Lines (records)/sec for a dbaccess unload query, that only calls the timestamp in question, that is, it's a 10M row single field query.
 
-# Outut Demo and Rates..
+## Test Results
 ```
 ============== realtime_demo.sh ==================
 
