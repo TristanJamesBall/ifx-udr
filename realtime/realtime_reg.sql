@@ -25,26 +25,30 @@
  -- 
  --  WORKAROUNDS:
  --
- --   - Mark the functions not variant. Despite the documentation, I've not seen much evidence that this results
- --     in any caching of the values, but it does mean utc_realtime_ns() is only called twice in the above
- --
- --   - You can also force the sub query to fully matarialize, by either sorting or using a 'first ..' limit
- --     but that requires everyone to know that.. sowe're going the 'not variant' path
+ --   - You can also force the sub query to fully matarialize, by either sorting or using a 'first ..' 
+ --   - In some case marking the function as variant or not variant ( confusingly, either way ) may help
  --
  --  I have a case open with IBM about the above
  --
+ --
+ --  In a "normal" query where we're doing somethig like...
+ --
+ --    insert into table(...) values( realtime_dt() ... ) 
+ --  
+ --  ... then the above issue wont matte anyway
+
 
 
 create function if not exists realtime_dt() returns datetime year to fraction(5)
 	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
 	language c  
-	not variant;
+	variant;
 
 
 create function if not exists utc_realtime_dt() returns datetime year to fraction(5)
 	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
 	language c  
-	not variant;
+	variant;
 
 
 
@@ -59,4 +63,4 @@ create function if not exists utc_realtime_dt() returns datetime year to fractio
 create function if not exists utc_realtime_dec() returns decimal(32,9)
 	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
 	language c  
-	not variant;
+	variant;
