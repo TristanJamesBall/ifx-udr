@@ -2,6 +2,7 @@
 # Table of contents
 
 - [realtime.udr](#realtimeudr)
+  - [Outstanding Issues](#outstanding-issues)
   - [Example Use](#example-use)
   - [Example Result](#example-result)
 - [Performanance](#performance)
@@ -16,12 +17,19 @@ A C User Defined Routine wrapper around `clock_gettime(2)` which gets the curren
  - By default returns a `datetime year to fraction(5)`
  - Provides a new timestamp (if the time has changed!) every call, 
    - **Even when called multiple times from within a stored proc or transaction** unlike `current` or `sysdate`
- - Fairly quick
+ - Fairly quick - unlikely to be noticible tbh
  - Safe, to the best of my knowledge, although I"ve only tested on Linux
- - Nanosecond resolution option. ;-)
+ - Extra bits in the code not shown here:
+   - Functions to return the time as decimal to Nanosecond resolution 
+   - Millisecond/Microsecond since Unix epoch as time as bigint whole numbers
+   - Conversion functions to convert either  these back to datetimes, with some loss of precsision
 
+## Outstanding Issues
+
+ - C code has a lot of duplication betweeen the various functions, could be cleaned up a lot
 
 ## Example Use
+
 ```
 select * from (
     select

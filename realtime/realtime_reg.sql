@@ -64,3 +64,55 @@ create function if not exists utc_realtime_dec() returns decimal(32,9)
 	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
 	language c  
 	variant;
+
+
+create function if not exists utc_realtime_frac5() returns decimal(32,5)
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+
+create function if not exists utc_realtime_usec() returns bigint
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+
+create function if not exists utc_realtime_msec() returns bigint
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+
+create function if not exists utc_realtime_sec() returns bigint
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+
+create function if not exists get_nsec() returns bigint
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+
+create function if not exists usec_to_datetime(bigint) returns datetime year to fraction(5)
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+create function if not exists msec_to_datetime(bigint) returns datetime year to fraction(5)
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+create function if not exists dec_to_datetime(decimal) returns datetime year to fraction(5)
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+
+create function if not exists usec_to_utc_datetime(bigint) returns datetime year to fraction(5)
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+create function if not exists msec_to_utc_datetime(bigint) returns datetime year to fraction(5)
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;
+create function if not exists dec_to_utc_datetime(decimal) returns datetime year to fraction(5)
+	external name '$INFORMIXDIR/extend/realtime/realtime.bld' 
+	language c  
+	variant;

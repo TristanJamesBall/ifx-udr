@@ -3,6 +3,7 @@
 #include <time.h>
 #include <sys/types.h>
 #include <string.h>
+#include <stdint.h>
 
 /*
  * ( with thanks Daniel Stenberg, daniel@haxx.se of curl fame, I'm re-using his license notice )
@@ -58,7 +59,10 @@
 #define USE_CLOCK CLOCK_REALTIME
 
 #define NSEC   (long)1000000000
+#define USEC   (long)1000000
+#define MSEC   (long)1000
 #define FRAC5  (long)100000
+#define FRAC4  (long)10000
 
 /* 
  * LINUX NOTE:
@@ -239,6 +243,411 @@ utc_realtime_dec( MI_FPARAM *fParam ) {
 
 	decdiv( &dec_part, &nsec, &dec_part );
     decadd( ret, &dec_part, ret );
+
+    return( ret );
+
+}
+
+
+/* 
+ *
+ * Seconds to Fraction(5) Since the Epoch, as a decimal
+ * 
+ *
+ * Returns seconds.fffff
+ *
+ */
+
+mi_decimal*
+utc_realtime_frac5( MI_FPARAM *fParam ) {
+
+    mi_decimal* ret;
+    timespec_t ts;
+    mi_decimal dec_part, frac4;
+	/* frac4 here beccause 4+5 == 9 */
+
+    clock_gettime(USE_CLOCK, &ts);
+
+
+	if ( ( ret = (mi_decimal *)mi_dalloc(sizeof(mi_decimal), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in utc_realtime_dec()" );
+       return(ret);
+
+    }
+
+	int64_to_dec( FRAC4, &frac4 );
+    int64_to_dec( ts.tv_sec, ret );
+    int64_to_dec( ts.tv_nsec, &dec_part );
+
+	decdiv( &dec_part, &frac4, &dec_part );
+    decadd( ret, &dec_part, ret );
+
+    return( ret );
+
+}
+
+
+
+/* 
+ *
+ * Microseconds since the epoch, as a bigint whole number.
+ * This is fairly safe given the wrap times:
+ *
+ * $ printf " %ld Years\n" $(( 0x7fffffffffffffff / (24 * 60 * 60 * 365 * 1000 * 1000) ))
+ *
+ *   292471 Years
+ *
+ * Returns microseconds
+ *
+ */
+
+mi_bigint*
+utc_realtime_msec( MI_FPARAM *fParam ) {
+
+    mi_bigint* ret;
+    timespec_t ts;
+
+
+    clock_gettime(USE_CLOCK, &ts);
+
+
+	if ( ( ret = (mi_bigint *)mi_dalloc(sizeof(mi_bigint), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in utc_realtime_dec()" );
+       return(ret);
+
+    }
+
+    *ret = ts.tv_sec * MSEC;
+	*ret += ts.tv_nsec / USEC;
+
+    return( ret );
+
+}
+
+
+/* 
+ *
+ * Milliseconds since the epoch, as a bigint whole number.
+ * Wrap times: 
+ *
+ * $  printf " %ld Years\n" $(( 0x7fffffffffffffff / (24 * 60 * 60 * 365 * 1000) ))
+ *
+ *   292471208 Years
+ *
+ * Returns milliseconds
+ *
+ */
+
+mi_bigint*
+utc_realtime_usec( MI_FPARAM *fParam ) {
+
+    mi_bigint* ret;
+    timespec_t ts;
+
+
+    clock_gettime(USE_CLOCK, &ts);
+
+
+	if ( ( ret = (mi_bigint *)mi_dalloc(sizeof(mi_bigint), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in utc_realtime_dec()" );
+       return(ret);
+
+    }
+
+    *ret = ts.tv_sec * USEC;
+	*ret += ts.tv_nsec / MSEC;
+
+    return( ret );
+
+}
+
+
+
+/* 
+ *
+ * Seconds since the epoch, as a bigint whole number.
+ *
+ * Looking in sysmaster:sshmvals will be faster than this, but gives as slightly different
+ * timestamp, so including this just for consistancy with the interface
+ *
+ * Returns seconds
+ *
+ */
+
+mi_bigint*
+utc_realtime_sec( MI_FPARAM *fParam ) {
+
+    mi_bigint* ret;
+    timespec_t ts;
+
+
+    clock_gettime(USE_CLOCK, &ts);
+
+
+	if ( ( ret = (mi_bigint *)mi_dalloc(sizeof(mi_bigint), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in utc_realtime_dec()" );
+       return(ret);
+
+    }
+
+    *ret = ts.tv_sec;
+
+    return( ret );
+
+}
+
+mi_datetime*
+msec_to_datetime( bigint *msec,MI_FPARAM *fParam  ) {
+
+    mi_datetime *ret,*dt;
+    char buf[60];
+    struct tm tm;
+	time_t int_part;
+	int64_t dec_part;
+
+
+	if ( ( ret = (mi_datetime *)mi_dalloc(sizeof(mi_datetime), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in msec_to_datetime()" );
+       return(ret);
+
+    }
+	int_part = (time_t)( *msec / MSEC );
+	dec_part = (int64_t)( *msec % MSEC );
+    localtime_r( &int_part, &tm );
+
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+    snprintf(&buf[19],6,".%03ld",dec_part % MSEC);
+
+    dt = mi_string_to_datetime(buf, "datetime year to fraction(3)");
+    *ret = *dt;
+
+    return(ret);
+}
+
+
+
+mi_datetime*
+msec_to_utc_datetime( bigint *msec,MI_FPARAM *fParam  ) {
+
+    mi_datetime *ret,*dt;
+    char buf[60];
+    struct tm tm;
+	time_t int_part;
+	int64_t dec_part;
+
+
+	if ( ( ret = (mi_datetime *)mi_dalloc(sizeof(mi_datetime), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in msec_to_datetime()" );
+       return(ret);
+
+    }
+	int_part = (time_t)( *msec / MSEC );
+	dec_part = (int64_t)( *msec % MSEC );
+    gmtime_r( &int_part, &tm );
+
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+    snprintf(&buf[19],6,".%03ld",dec_part % MSEC);
+
+    dt = mi_string_to_datetime(buf, "datetime year to fraction(3)");
+    *ret = *dt;
+
+    return(ret);
+}
+
+mi_datetime*
+usec_to_datetime( bigint *usec,MI_FPARAM *fParam  ) {
+
+    mi_datetime *ret,*dt;
+    char buf[60];
+    struct tm tm;
+	time_t int_part;
+	int64_t dec_part;
+
+
+	if ( ( ret = (mi_datetime *)mi_dalloc(sizeof(mi_datetime), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in usec_to_datetime()" );
+       return(ret);
+
+    }
+	int_part = (time_t)( *usec / USEC );
+	dec_part = (int64_t)( (*usec % USEC)/10 );
+    localtime_r( &int_part, &tm );
+
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+    snprintf(&buf[19],8,".%05ld",dec_part % FRAC5);
+
+    dt = mi_string_to_datetime(buf, "datetime year to fraction(5)");
+    *ret = *dt;
+
+    return(ret);
+}
+
+mi_datetime*
+usec_to_utc_datetime( bigint *usec,MI_FPARAM *fParam  ) {
+
+    mi_datetime *ret,*dt;
+    char buf[60];
+    struct tm tm;
+	time_t int_part;
+	int64_t dec_part;
+
+
+	if ( ( ret = (mi_datetime *)mi_dalloc(sizeof(mi_datetime), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in usec_to_datetime()" );
+       return(ret);
+
+    }
+	int_part = (time_t)( *usec / USEC );
+	dec_part = (int64_t)( (*usec % USEC)/10 );
+    gmtime_r( &int_part, &tm );
+
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+    snprintf(&buf[19],8,".%05ld",dec_part % FRAC5);
+
+    dt = mi_string_to_datetime(buf, "datetime year to fraction(5)");
+    *ret = *dt;
+
+    return(ret);
+}
+
+mi_datetime*
+dec_to_datetime( mi_decimal *in,MI_FPARAM *fParam  ) {
+
+    mi_datetime *ret,*dt;
+    char buf[60];
+    struct tm tm;
+	mi_decimal dec_int_part,dec_dec_part,dec_nsec;
+	time_t int_part;
+	int64_t dec_part;
+
+
+	if ( ( ret = (mi_datetime *)mi_dalloc(sizeof(mi_datetime), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in usec_to_datetime()" );
+       return(ret);
+
+    }
+	/* what a palaval... */
+
+	int64_to_dec( NSEC, &dec_nsec );
+
+    deccopy( in, &dec_int_part );
+    dectrunc( &dec_int_part,0 );
+    decsub( in, &dec_int_part, &dec_dec_part );
+	decmul( &dec_dec_part, &dec_nsec, &dec_dec_part );
+
+	dec_to_int64(&dec_int_part,&int_part);
+	dec_to_int64(&dec_dec_part,&dec_part);
+	/* 
+	 * At this point int_part holds our seconds, as a whole number
+	 * while dec_part holds 'nanoseconds', again as a while number.
+	 * If the incoming decimal only had say 2 decimal places, 
+	 * our nanosecond will loook like nn0000000
+	 */
+
+    localtime_r( &int_part, &tm );
+
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+    snprintf(&buf[19],8,".%05ld",(dec_part / FRAC4)%FRAC5 );
+
+    dt = mi_string_to_datetime(buf, "datetime year to fraction(5)");
+    *ret = *dt;
+
+    return(ret);
+}
+
+
+
+mi_datetime*
+dec_to_utc_datetime( mi_decimal *in,MI_FPARAM *fParam  ) {
+
+    mi_datetime *ret,*dt;
+    char buf[60];
+    struct tm tm;
+	mi_decimal dec_int_part,dec_dec_part,dec_nsec;
+	time_t int_part;
+	int64_t dec_part;
+
+
+	if ( ( ret = (mi_datetime *)mi_dalloc(sizeof(mi_datetime), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in dec_to_utc_datetime)" );
+       return(ret);
+
+    }
+	/* what see localtime version above for comments */
+
+	int64_to_dec( NSEC, &dec_nsec );
+
+    deccopy( in, &dec_int_part );
+    dectrunc( &dec_int_part,0 );
+    decsub( in, &dec_int_part, &dec_dec_part );
+	decmul( &dec_dec_part, &dec_nsec, &dec_dec_part );
+
+	dec_to_int64(&dec_int_part,&int_part);
+	dec_to_int64(&dec_dec_part,&dec_part);
+
+    gmtime_r( &int_part, &tm );
+
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm);
+    snprintf(&buf[19],8,".%05ld",(dec_part / FRAC4)%FRAC5 );
+
+    dt = mi_string_to_datetime(buf, "datetime year to fraction(5)");
+    *ret = *dt;
+
+    return(ret);
+}
+
+
+
+
+/* 
+ *
+ * Nanosecond value for the current second, as a bigint whole number
+ *
+ * NOT A FULL TIME
+ *
+ * Returns nanoseconds
+ *
+ */
+
+mi_bigint*
+get_nsec( MI_FPARAM *fParam ) {
+
+    mi_bigint* ret;
+    timespec_t ts;
+
+
+    clock_gettime(USE_CLOCK, &ts);
+
+
+	if ( ( ret = (mi_bigint *)mi_dalloc(sizeof(mi_bigint), PER_COMMAND) ) == NULL ) {
+
+       mi_fp_setreturnisnull(fParam, 0, MI_TRUE);
+       mi_db_error_raise(NULL, MI_EXCEPTION, "Memory allocation failure in get_nsec()" );
+       return(ret);
+
+    }
+
+    *ret = ts.tv_nsec;
 
     return( ret );
 
