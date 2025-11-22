@@ -1,14 +1,16 @@
 
 # realtime.udr 
 
-Simple wrappers around clock_gettime(2) which gets the current time in UTC or Localtime
+Simple wrappers around `clock_gettime(2)` which gets the current time in UTC or Localtime
 
  - By default returns a `datetime year to fraction(5)`
  - Provides a new timestamp (if the time has changed!) every call, 
    - **wven from within a stored proc or transaction** unlike `current` or `sysdate`
+ - Fairly quick
+ - Safe, to the best of my knowledge, although I"ve only tested on Linux
 
 
-# Ouutut Notes
+# Output Notes
 
 `utc_realtime_dec()` has been cast to vharchar to avoid dbaccess DBFLTMASK limits on decimal sizes
 
