@@ -32,8 +32,6 @@
  * authorization of the copyright holder.
  *
  *
- * ENDCOPYRIGHT AND PERMISSION NOTICE
- *
  */
 
 
